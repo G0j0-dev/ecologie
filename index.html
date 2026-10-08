@@ -1,729 +1,1803 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌱 Eco-Héros - Le jeu</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 Eco-Héros 3D</title>
 
-  <style>
+<style>
     * {
-      box-sizing: border-box;
+        box-sizing: border-box;
     }
 
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #dff6e5, #f8fff9);
-      color: #173b2b;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background: #111;
     }
 
-    .game {
-      width: 100%;
-      max-width: 850px;
-      background: white;
-      border-radius: 25px;
-      padding: 30px;
-      box-shadow: 0 15px 50px rgba(0, 80, 40, 0.15);
+    #game {
+        width: 100vw;
+        height: 100vh;
     }
 
-    header {
-      text-align: center;
-      margin-bottom: 25px;
+    /* =========================
+       HUD
+    ========================= */
+
+    #hud {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 10;
+        width: 330px;
+        color: white;
+        pointer-events: none;
     }
 
-    header h1 {
-      font-size: 42px;
-      margin: 0;
+    .panel {
+        background: rgba(13, 35, 24, 0.92);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 18px;
+        padding: 15px;
+        margin-bottom: 10px;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.25);
     }
 
-    header p {
-      color: #62806e;
-      font-size: 18px;
+    .title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+
+    .subtitle {
+        color: #a9d8b7;
+        font-size: 13px;
     }
 
     .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 25px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-top: 12px;
     }
 
     .stat {
-      background: #eff9f1;
-      border-radius: 18px;
-      padding: 18px;
-      text-align: center;
+        background: rgba(255,255,255,0.08);
+        padding: 10px;
+        border-radius: 12px;
     }
 
-    .stat .number {
-      font-size: 28px;
-      font-weight: bold;
-      color: #16834e;
+    .stat-value {
+        font-size: 20px;
+        font-weight: bold;
     }
 
-    .stat span {
-      color: #668070;
-      font-size: 14px;
+    .stat-label {
+        font-size: 11px;
+        color: #a8bcae;
     }
 
-    .progress-container {
-      background: #dfeee3;
-      height: 12px;
-      border-radius: 20px;
-      overflow: hidden;
-      margin-bottom: 25px;
+    #mission {
+        font-size: 14px;
+        line-height: 1.4;
     }
 
-    .progress {
-      height: 100%;
-      width: 0%;
-      background: #28a65c;
-      transition: width 0.4s;
+    #message {
+        position: fixed;
+        left: 50%;
+        bottom: 80px;
+        transform: translateX(-50%);
+        z-index: 20;
+        background: rgba(17, 59, 36, 0.95);
+        color: white;
+        padding: 14px 22px;
+        border-radius: 14px;
+        font-weight: bold;
+        opacity: 0;
+        transition: 0.25s;
+        pointer-events: none;
+        text-align: center;
     }
 
-    .mission {
-      background: #173b2b;
-      color: white;
-      border-radius: 20px;
-      padding: 25px;
-      margin-bottom: 20px;
+    #message.show {
+        opacity: 1;
     }
 
-    .mission-number {
-      color: #9de7b5;
-      font-weight: bold;
-      margin-bottom: 10px;
+    /* =========================
+       Contrôles
+    ========================= */
+
+    #controls {
+        position: fixed;
+        bottom: 15px;
+        left: 15px;
+        z-index: 10;
+        color: white;
+        background: rgba(0,0,0,0.65);
+        border-radius: 15px;
+        padding: 12px 16px;
+        font-size: 13px;
     }
 
-    .question {
-      font-size: 25px;
-      font-weight: bold;
+    #interaction {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translateX(-50%);
+        z-index: 10;
+        background: rgba(255,255,255,0.95);
+        color: #173b2b;
+        padding: 13px 22px;
+        border-radius: 30px;
+        font-weight: bold;
+        display: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.25);
     }
 
-    .choices {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
+    #crosshair {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        width: 8px;
+        height: 8px;
+        transform: translate(-50%, -50%);
+        border: 2px solid white;
+        border-radius: 50%;
+        z-index: 10;
+        pointer-events: none;
+        opacity: 0.7;
     }
 
-    .choice {
-      border: 2px solid #dce9df;
-      background: white;
-      border-radius: 18px;
-      padding: 20px;
-      cursor: pointer;
-      text-align: left;
-      transition: 0.2s;
-      font-size: 16px;
+    /* =========================
+       Ecran de démarrage
+    ========================= */
+
+    #startScreen {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background:
+            linear-gradient(
+                rgba(8,35,21,0.65),
+                rgba(8,35,21,0.9)
+            ),
+            radial-gradient(circle at center, #4eaa70, #102619);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-align: center;
     }
 
-    .choice:hover {
-      transform: translateY(-3px);
-      border-color: #28a65c;
-      background: #f3fff6;
+    .start-box {
+        max-width: 650px;
+        padding: 30px;
     }
 
-    .choice:disabled {
-      cursor: default;
+    .start-box h1 {
+        font-size: clamp(42px, 8vw, 80px);
+        margin: 0;
     }
 
-    .emoji {
-      font-size: 35px;
-      display: block;
-      margin-bottom: 8px;
+    .start-box p {
+        font-size: 19px;
+        color: #d2edda;
+        line-height: 1.5;
     }
 
-    .choice-title {
-      font-weight: bold;
-      font-size: 18px;
-      display: block;
-      margin-bottom: 5px;
+    #startButton {
+        margin-top: 20px;
+        border: 0;
+        padding: 17px 32px;
+        border-radius: 14px;
+        background: #39c56d;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.25);
     }
 
-    .choice-description {
-      color: #6b7c72;
-      font-size: 14px;
+    #startButton:hover {
+        background: #2fa95c;
+        transform: translateY(-2px);
     }
 
-    .good {
-      background: #e7faed !important;
-      border-color: #27a75d !important;
+    /* =========================
+       Mobile
+    ========================= */
+
+    #mobileControls {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 30;
     }
 
-    .bad {
-      background: #fff0f0 !important;
-      border-color: #e05c5c !important;
+    .mobile-row {
+        display: flex;
+        justify-content: center;
     }
 
-    .result {
-      min-height: 35px;
-      margin-top: 20px;
-      font-size: 18px;
-      font-weight: bold;
-      text-align: center;
+    .mobile-button {
+        width: 55px;
+        height: 55px;
+        margin: 3px;
+        border: 0;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.75);
+        font-size: 22px;
+        font-weight: bold;
     }
 
-    .next {
-      display: block;
-      margin: 15px auto 0;
-      padding: 14px 25px;
-      border: none;
-      border-radius: 12px;
-      background: #218c5b;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
+    @media (max-width: 700px) {
+
+        #hud {
+            width: calc(100% - 30px);
+        }
+
+        .stats {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .stat {
+            padding: 7px;
+        }
+
+        .stat-value {
+            font-size: 15px;
+        }
+
+        #controls {
+            display: none;
+        }
+
+        #mobileControls {
+            display: block;
+        }
     }
-
-    .next:hover {
-      background: #176f47;
-    }
-
-    .next:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .final {
-      text-align: center;
-      padding: 30px 10px;
-    }
-
-    .final h2 {
-      font-size: 35px;
-    }
-
-    .final-score {
-      font-size: 55px;
-      color: #218c5b;
-      font-weight: bold;
-    }
-
-    .tips {
-      background: #eff9f1;
-      border-radius: 18px;
-      padding: 20px;
-      margin-top: 20px;
-      text-align: left;
-    }
-
-    .tips li {
-      margin: 10px 0;
-    }
-
-    @media (max-width: 600px) {
-      .game {
-        padding: 20px;
-      }
-
-      header h1 {
-        font-size: 32px;
-      }
-
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .choices {
-        grid-template-columns: 1fr;
-      }
-
-      .question {
-        font-size: 21px;
-      }
-    }
-  </style>
+</style>
 </head>
 
 <body>
 
-<div class="game">
+<div id="game"></div>
 
-  <header>
-    <h1>🌱 Eco-Héros</h1>
-    <p>Réduis ta facture et protège la planète !</p>
-  </header>
+<!-- Ecran de départ -->
+<div id="startScreen">
 
-  <div class="stats">
-    <div class="stat">
-      <div class="number" id="score">0</div>
-      <span>🌿 Points écolo</span>
+    <div class="start-box">
+
+        <h1>🌱</h1>
+
+        <h1>Eco-Héros 3D</h1>
+
+        <p>
+            Bienvenue dans ta maison écologique !
+            Explore les pièces, trouve les appareils énergivores
+            et réduis ta facture.
+        </p>
+
+        <p>
+            🎯 Ton objectif : économiser de l'argent
+            tout en réduisant ton impact sur la planète.
+        </p>
+
+        <button id="startButton">
+            🚀 COMMENCER L'AVENTURE
+        </button>
+
     </div>
-
-    <div class="stat">
-      <div class="number" id="money">0 €</div>
-      <span>💰 Économies</span>
-    </div>
-
-    <div class="stat">
-      <div class="number" id="co2">0 kg</div>
-      <span>🌍 CO₂ évité</span>
-    </div>
-  </div>
-
-  <div class="progress-container">
-    <div class="progress" id="progress"></div>
-  </div>
-
-  <div id="gameContent">
-
-    <div class="mission">
-      <div class="mission-number" id="missionNumber">
-        Mission 1 / 8
-      </div>
-
-      <div class="question" id="question">
-        Chargement...
-      </div>
-    </div>
-
-    <div class="choices" id="choices"></div>
-
-    <div class="result" id="result"></div>
-
-    <button class="next" id="next" disabled>
-      Mission suivante →
-    </button>
-
-  </div>
 
 </div>
 
 
-<script>
-
-const missions = [
-
-  {
-    question: "🥶 Il fait un peu froid dans ton salon. Que fais-tu ?",
-
-    choices: [
-      {
-        emoji: "🔥",
-        title: "Augmenter le chauffage",
-        description: "Je monte le chauffage de 2°C.",
-        good: false
-      },
-      {
-        emoji: "🧥",
-        title: "Mettre un pull",
-        description: "Je garde le chauffage raisonnable.",
-        good: true,
-        money: 8,
-        co2: 1.8
-      },
-      {
-        emoji: "🪟",
-        title: "Ouvrir les fenêtres",
-        description: "Avec le chauffage allumé...",
-        good: false
-      }
-    ]
-  },
-
-  {
-    question: "💡 Tu quittes une pièce pendant une heure.",
-
-    choices: [
-      {
-        emoji: "💡",
-        title: "Laisser la lumière",
-        description: "Je la laisse allumée.",
-        good: false
-      },
-      {
-        emoji: "🌑",
-        title: "Éteindre la lumière",
-        description: "Pas besoin d'éclairer une pièce vide.",
-        good: true,
-        money: 4,
-        co2: 0.2
-      },
-      {
-        emoji: "📺",
-        title: "Laisser la télévision allumée",
-        description: "Je pars et je la laisse tourner.",
-        good: false
-      }
-    ]
-  },
-
-  {
-    question: "🚿 Comment économiser l'eau ?",
-
-    choices: [
-      {
-        emoji: "🚿",
-        title: "Prendre une douche courte",
-        description: "Une douche rapide consomme moins.",
-        good: true,
-        money: 7,
-        co2: 0.7
-      },
-      {
-        emoji: "🛁",
-        title: "Prendre un long bain",
-        description: "Beaucoup d'eau chaude.",
-        good: false
-      },
-      {
-        emoji: "🚰",
-        title: "Laisser couler le robinet",
-        description: "Pendant que je me brosse les dents.",
-        good: false
-      }
-    ]
-  },
-
-  {
-    question: "🧺 Tu dois faire une lessive.",
-
-    choices: [
-      {
-        emoji: "🧺",
-        title: "Attendre que la machine soit pleine",
-        description: "Puis choisir le programme éco.",
-        good: true,
-        money: 9,
-        co2: 1.1
-      },
-      {
-        emoji: "🧺",
-        title: "Faire une demi-machine",
-        description: "Même pour quelques vêtements.",
-        good: false
-      },
-      {
-        emoji: "🔥",
-        title: "Toujours laver à 60°C",
-        description: "Même lorsque ce n'est pas nécessaire.",
-        good: false
-      }
-    ]
-  },
-
-  {
-    question: "🥤 Tu as soif en dehors de chez toi.",
-
-    choices: [
-      {
-        emoji: "🥤",
-        title: "Acheter une bouteille",
-        description: "Une nouvelle bouteille plastique.",
-        good: false
-      },
-      {
-        emoji: "🚰",
-        title: "Utiliser ma gourde",
-        description: "Je la remplis avec de l'eau.",
-        good: true,
-        money: 6,
-        co2: 0.3
-      },
-      {
-        emoji: "🚗",
-        title: "Prendre la voiture",
-        description: "Pour acheter une bouteille.",
-        good: false
-      }
-    ]
-  },
-
-  {
-    question: "🔌 Ta facture d'électricité augmente.",
-
-    choices: [
-      {
-        emoji: "🔌",
-        title: "Débrancher les appareils inutilisés",
-        description: "Je limite les consommations inutiles.",
-        good: true,
-        money: 10,
-        co2: 2.2
-      },
-      {
-        emoji: "💻",
-        title: "Laisser le PC allumé",
-        description: "Même toute la nuit.",
-        good: false
-      },
-      {
-        emoji: "📺",
-        title: "Laisser tout en veille",
-        description: "Télévision, console, ordinateur...",
-        good: false
-      }
-    ]
-  },
-
-  {
-    question: "🚗 Tu dois aller acheter du pain.",
-
-    choices: [
-      {
-        emoji: "🚗",
-        title: "Prendre la voiture",
-        description: "Même si la boulangerie est proche.",
-        good: false
-      },
-      {
-        emoji: "🚲",
-        title: "Prendre le vélo",
-        description: "Bon pour la planète et gratuit.",
-        good: true,
-        money: 5,
-        co2: 1.5
-      },
-      {
-        emoji: "🚕",
-        title: "Prendre un taxi",
-        description: "Pour un trajet de quelques minutes.",
-        good: false
-      }
-    ]
-  },
-
-  {
-    question: "🍎 Tu dois acheter des fruits.",
-
-    choices: [
-      {
-        emoji: "🥭",
-        title: "Acheter des produits locaux et de saison",
-        description: "Moins de transport et souvent moins cher.",
-        good: true,
-        money: 8,
-        co2: 1.4
-      },
-      {
-        emoji: "✈️",
-        title: "Choisir des fruits importés par avion",
-        description: "Un transport très énergivore.",
-        good: false
-      },
-      {
-        emoji: "🛒",
-        title: "Acheter beaucoup plus que nécessaire",
-        description: "Risque de gaspillage.",
-        good: false
-      }
-    ]
-  }
-
-];
-
-let currentMission = 0;
-let score = 0;
-let money = 0;
-let co2 = 0;
-let answered = false;
-
-
-const scoreElement = document.getElementById("score");
-const moneyElement = document.getElementById("money");
-const co2Element = document.getElementById("co2");
-
-const missionNumber = document.getElementById("missionNumber");
-const question = document.getElementById("question");
-const choicesContainer = document.getElementById("choices");
-
-const result = document.getElementById("result");
-const nextButton = document.getElementById("next");
-const progress = document.getElementById("progress");
-
-
-function updateStats() {
-
-  scoreElement.textContent = score;
-
-  moneyElement.textContent =
-    Math.round(money) + " €";
-
-  co2Element.textContent =
-    co2.toFixed(1) + " kg";
-}
-
-
-function showMission() {
-
-  answered = false;
-
-  const mission = missions[currentMission];
-
-  missionNumber.textContent =
-    "Mission " +
-    (currentMission + 1) +
-    " / " +
-    missions.length;
-
-  question.textContent = mission.question;
-
-  choicesContainer.innerHTML = "";
-
-  result.textContent = "";
-
-  nextButton.disabled = true;
-
-  nextButton.textContent =
-    currentMission === missions.length - 1
-      ? "Voir mon résultat 🌍"
-      : "Mission suivante →";
-
-  progress.style.width =
-    (currentMission / missions.length * 100) + "%";
-
-
-  mission.choices.forEach((choice) => {
-
-    const button = document.createElement("button");
-
-    button.className = "choice";
-
-    button.innerHTML = `
-      <span class="emoji">${choice.emoji}</span>
-
-      <span class="choice-title">
-        ${choice.title}
-      </span>
-
-      <span class="choice-description">
-        ${choice.description}
-      </span>
-    `;
-
-    button.addEventListener("click", () => {
-
-      if (answered) return;
-
-      answered = true;
-
-      document
-        .querySelectorAll(".choice")
-        .forEach(btn => btn.disabled = true);
-
-
-      if (choice.good) {
-
-        button.classList.add("good");
-
-        score += 10;
-
-        money += choice.money || 0;
-
-        co2 += choice.co2 || 0;
-
-        result.textContent =
-          "✅ Excellent ! +10 points 🌱";
-
-      } else {
-
-        button.classList.add("bad");
-
-        score = Math.max(0, score - 3);
-
-        result.textContent =
-          "❌ Pas idéal... -3 points. Essaie de faire plus écologique !";
-      }
-
-
-      updateStats();
-
-      nextButton.disabled = false;
-
-    });
-
-    choicesContainer.appendChild(button);
-
-  });
-
-}
-
-
-function showFinalScreen() {
-
-  progress.style.width = "100%";
-
-  document.getElementById("gameContent").innerHTML = `
-
-    <div class="final">
-
-      <h2>🎉 Mission terminée !</h2>
-
-      <p>Voici ton résultat :</p>
-
-      <div class="final-score">
-        ${score} points
-      </div>
-
-      <div class="tips">
-
-        <h3>🌍 Ton bilan</h3>
-
-        <p>
-          💰 Économies potentielles :
-          <strong>${Math.round(money)} €</strong>
-        </p>
-
-        <p>
-          🌱 CO₂ évité :
-          <strong>${co2.toFixed(1)} kg</strong>
-        </p>
-
-        <p>
-          ⭐ Score écologique :
-          <strong>${score} / ${missions.length * 10}</strong>
-        </p>
-
-        <h3>💡 Quelques réflexes à retenir</h3>
-
-        <ul>
-          <li>Éteindre les lumières inutiles.</li>
-          <li>Éviter de surchauffer son logement.</li>
-          <li>Privilégier les douches courtes.</li>
-          <li>Faire tourner les machines pleines.</li>
-          <li>Utiliser une gourde.</li>
-          <li>Marcher ou prendre le vélo lorsque c'est possible.</li>
-          <li>Limiter les appareils en veille.</li>
-        </ul>
-
-      </div>
-
-      <button class="next" onclick="location.reload()">
-        🔄 Rejouer
-      </button>
+<!-- HUD -->
+<div id="hud">
+
+    <div class="panel">
+
+        <div class="title">
+            🌱 ECO-HÉROS
+        </div>
+
+        <div class="subtitle">
+            Mission : maison économique
+        </div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <div class="stat-value" id="money">
+                    100 €
+                </div>
+                <div class="stat-label">
+                    💰 Budget
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-value" id="energy">
+                    100
+                </div>
+                <div class="stat-label">
+                    ⚡ Énergie
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-value" id="water">
+                    100
+                </div>
+                <div class="stat-label">
+                    💧 Eau
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-value" id="co2">
+                    0
+                </div>
+                <div class="stat-label">
+                    🌍 CO₂
+                </div>
+            </div>
+
+        </div>
 
     </div>
-  `;
+
+
+    <div class="panel">
+
+        <div style="font-weight:bold;margin-bottom:6px;">
+            🎯 Mission
+        </div>
+
+        <div id="mission">
+            Trouve les équipements à optimiser.
+        </div>
+
+    </div>
+
+</div>
+
+
+<div id="crosshair"></div>
+
+<div id="interaction">
+    Appuie sur E pour interagir
+</div>
+
+<div id="message"></div>
+
+
+<div id="controls">
+    <strong>🎮 CONTRÔLES</strong><br>
+    ZQSD / WASD : se déplacer<br>
+    Souris : regarder<br>
+    E : interagir
+</div>
+
+
+<!-- Contrôles mobile -->
+<div id="mobileControls">
+
+    <div class="mobile-row">
+        <button class="mobile-button" data-key="z">▲</button>
+    </div>
+
+    <div class="mobile-row">
+        <button class="mobile-button" data-key="q">◀</button>
+        <button class="mobile-button" data-key="s">▼</button>
+        <button class="mobile-button" data-key="d">▶</button>
+    </div>
+
+    <div class="mobile-row">
+        <button class="mobile-button" id="mobileInteract">
+            E
+        </button>
+    </div>
+
+</div>
+
+
+<!-- Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<script>
+
+////////////////////////////////////////////////////////////
+// VARIABLES
+////////////////////////////////////////////////////////////
+
+let scene;
+let camera;
+let renderer;
+
+let player;
+let clock;
+
+let gameStarted = false;
+
+let energy = 100;
+let water = 100;
+let money = 100;
+let co2 = 0;
+
+let score = 0;
+
+let nearbyObject = null;
+
+const keys = {};
+
+const interactiveObjects = [];
+
+////////////////////////////////////////////////////////////
+// INITIALISATION
+////////////////////////////////////////////////////////////
+
+function init() {
+
+    scene = new THREE.Scene();
+
+    scene.background = new THREE.Color(0x9ed8ff);
+
+    scene.fog = new THREE.Fog(
+        0x9ed8ff,
+        25,
+        75
+    );
+
+
+    ////////////////////////////////////////////////////////
+    // CAMERA
+    ////////////////////////////////////////////////////////
+
+    camera = new THREE.PerspectiveCamera(
+        70,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        200
+    );
+
+    camera.position.set(
+        0,
+        3,
+        10
+    );
+
+
+    ////////////////////////////////////////////////////////
+    // RENDERER
+    ////////////////////////////////////////////////////////
+
+    renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+
+    renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio, 2)
+    );
+
+    renderer.shadowMap.enabled = true;
+
+    document
+        .getElementById("game")
+        .appendChild(renderer.domElement);
+
+
+    ////////////////////////////////////////////////////////
+    // LUMIERES
+    ////////////////////////////////////////////////////////
+
+    const ambient = new THREE.HemisphereLight(
+        0xffffff,
+        0x406040,
+        2
+    );
+
+    scene.add(ambient);
+
+
+    const sun = new THREE.DirectionalLight(
+        0xffffff,
+        2.5
+    );
+
+    sun.position.set(
+        20,
+        30,
+        10
+    );
+
+    sun.castShadow = true;
+
+    scene.add(sun);
+
+
+    ////////////////////////////////////////////////////////
+    // SOL
+    ////////////////////////////////////////////////////////
+
+    const groundGeometry =
+        new THREE.PlaneGeometry(
+            100,
+            100
+        );
+
+    const groundMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0x5ca85c
+        });
+
+    const ground =
+        new THREE.Mesh(
+            groundGeometry,
+            groundMaterial
+        );
+
+    ground.rotation.x =
+        -Math.PI / 2;
+
+    ground.receiveShadow = true;
+
+    scene.add(ground);
+
+
+    ////////////////////////////////////////////////////////
+    // MAISON
+    ////////////////////////////////////////////////////////
+
+    createHouse();
+
+
+    ////////////////////////////////////////////////////////
+    // OBJETS
+    ////////////////////////////////////////////////////////
+
+    createLamp(
+        -6,
+        2,
+        -3
+    );
+
+    createHeater(
+        0,
+        1,
+        -6
+    );
+
+    createShower(
+        6,
+        1,
+        -4
+    );
+
+    createTV(
+        -6,
+        1,
+        4
+    );
+
+    createComputer(
+        2,
+        1,
+        4
+    );
+
+    createFridge(
+        6,
+        1,
+        4
+    );
+
+
+    ////////////////////////////////////////////////////////
+    // ARBRES
+    ////////////////////////////////////////////////////////
+
+    createTree(-14, -10);
+    createTree(14, -10);
+    createTree(-16, 8);
+    createTree(15, 10);
+
+
+    ////////////////////////////////////////////////////////
+    // JOUEUR
+    ////////////////////////////////////////////////////////
+
+    player = new THREE.Object3D();
+
+    player.position.set(
+        0,
+        1.7,
+        10
+    );
+
+    scene.add(player);
+
+    player.add(camera);
+
+
+    ////////////////////////////////////////////////////////
+    // HORLOGE
+    ////////////////////////////////////////////////////////
+
+    clock = new THREE.Clock();
+
+
+    ////////////////////////////////////////////////////////
+    // EVENTS
+    ////////////////////////////////////////////////////////
+
+    window.addEventListener(
+        "keydown",
+        function(event) {
+
+            keys[event.key.toLowerCase()] = true;
+
+            if (
+                event.key.toLowerCase() === "e"
+            ) {
+                interact();
+            }
+
+        }
+    );
+
+
+    window.addEventListener(
+        "keyup",
+        function(event) {
+
+            keys[event.key.toLowerCase()] = false;
+
+        }
+    );
+
+
+    window.addEventListener(
+        "resize",
+        resize
+    );
+
+
+    renderer.domElement.addEventListener(
+        "click",
+        () => {
+
+            if (gameStarted) {
+
+                renderer.domElement
+                    .requestPointerLock();
+
+            }
+
+        }
+    );
+
+
+    document.addEventListener(
+        "mousemove",
+        mouseLook
+    );
+
+
+    ////////////////////////////////////////////////////////
+    // BOUTON START
+    ////////////////////////////////////////////////////////
+
+    document
+        .getElementById("startButton")
+        .addEventListener(
+            "click",
+            startGame
+        );
+
+
+    ////////////////////////////////////////////////////////
+    // MOBILE
+    ////////////////////////////////////////////////////////
+
+    document
+        .querySelectorAll(".mobile-button")
+        .forEach(button => {
+
+            const key =
+                button.dataset.key;
+
+            if (!key) return;
+
+            button.addEventListener(
+                "touchstart",
+                e => {
+
+                    e.preventDefault();
+
+                    keys[key] = true;
+
+                }
+            );
+
+            button.addEventListener(
+                "touchend",
+                e => {
+
+                    e.preventDefault();
+
+                    keys[key] = false;
+
+                }
+            );
+
+        });
+
+
+    document
+        .getElementById("mobileInteract")
+        .addEventListener(
+            "click",
+            interact
+        );
+
+
+    animate();
+
 }
 
 
-nextButton.addEventListener("click", () => {
+////////////////////////////////////////////////////////////
+// DEMARRER
+////////////////////////////////////////////////////////////
 
-  if (!answered) return;
+function startGame() {
 
-  if (currentMission < missions.length - 1) {
+    gameStarted = true;
 
-    currentMission++;
+    document
+        .getElementById("startScreen")
+        .style.display = "none";
 
-    showMission();
+    showMessage(
+        "🌱 Explore la maison et trouve les appareils !"
+    );
 
-  } else {
-
-    showFinalScreen();
-
-  }
-
-});
+}
 
 
-showMission();
-updateStats();
+////////////////////////////////////////////////////////////
+// MAISON
+////////////////////////////////////////////////////////////
+
+function createHouse() {
+
+    // Structure principale
+
+    const wallMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0xf0e3c2
+        });
+
+
+    // Mur gauche
+
+    createBox(
+        0,
+        2.5,
+        -8,
+        18,
+        5,
+        0.4,
+        wallMaterial
+    );
+
+
+    // Mur droit
+
+    createBox(
+        0,
+        2.5,
+        8,
+        18,
+        5,
+        0.4,
+        wallMaterial
+    );
+
+
+    // Mur arrière gauche
+
+    createBox(
+        -9,
+        2.5,
+        0,
+        0.4,
+        5,
+        16,
+        wallMaterial
+    );
+
+
+    // Mur arrière droit
+
+    createBox(
+        9,
+        2.5,
+        0,
+        0.4,
+        5,
+        16,
+        wallMaterial
+    );
+
+
+    // Sol maison
+
+    const floor =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                18,
+                0.3,
+                16
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0xb98d62
+            })
+        );
+
+    floor.position.y = 0;
+
+    floor.receiveShadow = true;
+
+    scene.add(floor);
+
+
+    // Toit
+
+    const roof =
+        new THREE.Mesh(
+            new THREE.ConeGeometry(
+                13,
+                5,
+                4
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x6e3930
+            })
+        );
+
+    roof.rotation.y =
+        Math.PI / 4;
+
+    roof.position.y = 7;
+
+    roof.scale.set(
+        1.3,
+        1,
+        0.8
+    );
+
+    roof.castShadow = true;
+
+    scene.add(roof);
+
+
+    // Fenêtres
+
+    createWindow(-9.2, 3, -3);
+    createWindow(-9.2, 3, 3);
+
+}
+
+
+////////////////////////////////////////////////////////////
+// CREER UN CUBE
+////////////////////////////////////////////////////////////
+
+function createBox(
+    x,
+    y,
+    z,
+    width,
+    height,
+    depth,
+    material
+) {
+
+    const mesh =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                width,
+                height,
+                depth
+            ),
+            material
+        );
+
+    mesh.position.set(
+        x,
+        y,
+        z
+    );
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    scene.add(mesh);
+
+    return mesh;
+
+}
+
+
+////////////////////////////////////////////////////////////
+// FENETRE
+////////////////////////////////////////////////////////////
+
+function createWindow(
+    x,
+    y,
+    z
+) {
+
+    const windowMesh =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                0.2,
+                2,
+                2.5
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x7dd7ff,
+                transparent: true,
+                opacity: 0.65
+            })
+        );
+
+    windowMesh.position.set(
+        x,
+        y,
+        z
+    );
+
+    scene.add(windowMesh);
+
+}
+
+
+////////////////////////////////////////////////////////////
+// LAMPE
+////////////////////////////////////////////////////////////
+
+function createLamp(
+    x,
+    y,
+    z
+) {
+
+    const group =
+        new THREE.Group();
+
+    group.position.set(
+        x,
+        y,
+        z
+    );
+
+    const base =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.4,
+                0.5,
+                0.3,
+                16
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x333333
+            })
+        );
+
+    base.position.y = -1;
+
+    group.add(base);
+
+
+    const bulb =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.3,
+                16,
+                16
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0xffffaa,
+                emissive: 0xffff44,
+                emissiveIntensity: 1
+            })
+        );
+
+    group.add(bulb);
+
+
+    const light =
+        new THREE.PointLight(
+            0xffeeaa,
+            3,
+            8
+        );
+
+    light.position.y = -0.2;
+
+    group.add(light);
+
+    scene.add(group);
+
+
+    addInteractive(
+        group,
+        "💡 Lumière",
+        () => {
+
+            light.intensity = 0;
+
+            energy -= 10;
+            money += 5;
+            co2 += 2;
+            score += 10;
+
+            updateHUD();
+
+            showMessage(
+                "💡 Lumière éteinte ! +5€ économisés"
+            );
+
+        }
+    );
+
+}
+
+
+////////////////////////////////////////////////////////////
+// CHAUFFAGE
+////////////////////////////////////////////////////////////
+
+function createHeater(
+    x,
+    y,
+    z
+) {
+
+    const heater =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                2.5,
+                1.2,
+                0.4
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0xdadada
+            })
+        );
+
+    heater.position.set(
+        x,
+        y,
+        z
+    );
+
+    heater.castShadow = true;
+
+    scene.add(heater);
+
+
+    addInteractive(
+        heater,
+        "🔥 Chauffage",
+        () => {
+
+            energy -= 15;
+            money += 12;
+            co2 += 4;
+            score += 15;
+
+            updateHUD();
+
+            showMessage(
+                "🔥 Chauffage optimisé ! +12€ économisés"
+            );
+
+        }
+    );
+
+}
+
+
+////////////////////////////////////////////////////////////
+// DOUCHE
+////////////////////////////////////////////////////////////
+
+function createShower(
+    x,
+    y,
+    z
+) {
+
+    const group =
+        new THREE.Group();
+
+    group.position.set(
+        x,
+        y,
+        z
+    );
+
+
+    const floor =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                2.5,
+                0.2,
+                2.5
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x8ed6e8
+            })
+        );
+
+    group.add(floor);
+
+
+    const pole =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.08,
+                0.08,
+                2.2
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0xaaaaaa
+            })
+        );
+
+    pole.position.set(
+        0,
+        1.1,
+        0
+    );
+
+    group.add(pole);
+
+
+    const head =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.3,
+                12,
+                12
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0xdddddd
+            })
+        );
+
+    head.position.set(
+        0,
+        2.2,
+        0
+    );
+
+    group.add(head);
+
+    scene.add(group);
+
+
+    addInteractive(
+        group,
+        "🚿 Douche",
+        () => {
+
+            water -= 15;
+            money += 10;
+            co2 += 2;
+            score += 15;
+
+            updateHUD();
+
+            showMessage(
+                "🚿 Douche optimisée ! +10€ économisés"
+            );
+
+        }
+    );
+
+}
+
+
+////////////////////////////////////////////////////////////
+// TV
+////////////////////////////////////////////////////////////
+
+function createTV(
+    x,
+    y,
+    z
+) {
+
+    const tv =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                2.8,
+                1.7,
+                0.2
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x111111
+            })
+        );
+
+    tv.position.set(
+        x,
+        y,
+        z
+    );
+
+    scene.add(tv);
+
+
+    addInteractive(
+        tv,
+        "📺 Télévision",
+        () => {
+
+            energy -= 8;
+            money += 6;
+            co2 += 2;
+            score += 10;
+
+            updateHUD();
+
+            showMessage(
+                "📺 Veille supprimée ! +6€ économisés"
+            );
+
+        }
+    );
+
+}
+
+
+////////////////////////////////////////////////////////////
+// ORDINATEUR
+////////////////////////////////////////////////////////////
+
+function createComputer(
+    x,
+    y,
+    z
+) {
+
+    const screen =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                2,
+                1.3,
+                0.15
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x222222
+            })
+        );
+
+    screen.position.set(
+        x,
+        y + 0.7,
+        z
+    );
+
+    scene.add(screen);
+
+
+    const desk =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                3,
+                0.2,
+                1.5
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x70482e
+            })
+        );
+
+    desk.position.set(
+        x,
+        y,
+        z
+    );
+
+    scene.add(desk);
+
+
+    addInteractive(
+        screen,
+        "💻 Ordinateur",
+        () => {
+
+            energy -= 10;
+            money += 8;
+            co2 += 3;
+            score += 12;
+
+            updateHUD();
+
+            showMessage(
+                "💻 Ordinateur éteint ! +8€ économisés"
+            );
+
+        }
+    );
+
+}
+
+
+////////////////////////////////////////////////////////////
+// FRIGO
+////////////////////////////////////////////////////////////
+
+function createFridge(
+    x,
+    y,
+    z
+) {
+
+    const fridge =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                1.7,
+                3.5,
+                1.5
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0xe7e7e7
+            })
+        );
+
+    fridge.position.set(
+        x,
+        y + 0.7,
+        z
+    );
+
+    fridge.castShadow = true;
+
+    scene.add(fridge);
+
+
+    addInteractive(
+        fridge,
+        "🧊 Réfrigérateur",
+        () => {
+
+            energy -= 5;
+            money += 4;
+            co2 += 1;
+            score += 8;
+
+            updateHUD();
+
+            showMessage(
+                "🧊 Frigo réglé correctement ! +4€"
+            );
+
+        }
+    );
+
+}
+
+
+////////////////////////////////////////////////////////////
+// ARBRE
+////////////////////////////////////////////////////////////
+
+function createTree(
+    x,
+    z
+) {
+
+    const trunk =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                0.5,
+                0.7,
+                4,
+                8
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x70452a
+            })
+        );
+
+    trunk.position.set(
+        x,
+        2,
+        z
+    );
+
+    trunk.castShadow = true;
+
+    scene.add(trunk);
+
+
+    const leaves =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                2.2,
+                12,
+                12
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x258342
+            })
+        );
+
+    leaves.position.set(
+        x,
+        5,
+        z
+    );
+
+    leaves.castShadow = true;
+
+    scene.add(leaves);
+
+}
+
+
+////////////////////////////////////////////////////////////
+// INTERACTIONS
+////////////////////////////////////////////////////////////
+
+function addInteractive(
+    object,
+    name,
+    action
+) {
+
+    object.userData.interactive = true;
+    object.userData.name = name;
+    object.userData.action = action;
+
+    interactiveObjects.push(object);
+
+}
+
+
+////////////////////////////////////////////////////////////
+// DETECTION OBJET PROCHE
+////////////////////////////////////////////////////////////
+
+function checkNearby() {
+
+    nearbyObject = null;
+
+    let closestDistance = 3;
+
+
+    interactiveObjects.forEach(
+        object => {
+
+            const distance =
+                player.position.distanceTo(
+                    object.position
+                );
+
+            if (
+                distance < closestDistance
+            ) {
+
+                closestDistance = distance;
+
+                nearbyObject = object;
+
+            }
+
+        }
+    );
+
+
+    const interaction =
+        document.getElementById(
+            "interaction"
+        );
+
+
+    if (nearbyObject) {
+
+        interaction.style.display =
+            "block";
+
+        interaction.textContent =
+            nearbyObject.userData.name +
+            " — appuie sur E";
+
+    } else {
+
+        interaction.style.display =
+            "none";
+
+    }
+
+}
+
+
+////////////////////////////////////////////////////////////
+// INTERAGIR
+////////////////////////////////////////////////////////////
+
+function interact() {
+
+    if (
+        nearbyObject &&
+        nearbyObject.userData.action
+    ) {
+
+        nearbyObject.userData.action();
+
+    }
+
+}
+
+
+////////////////////////////////////////////////////////////
+// DEPLACEMENT
+////////////////////////////////////////////////////////////
+
+function updatePlayer() {
+
+    if (!gameStarted) return;
+
+
+    const speed = 0.12;
+
+    const direction =
+        new THREE.Vector3();
+
+
+    if (
+        keys["z"] ||
+        keys["w"]
+    ) {
+
+        direction.z -= 1;
+
+    }
+
+    if (keys["s"]) {
+
+        direction.z += 1;
+
+    }
+
+    if (
+        keys["q"] ||
+        keys["a"]
+    ) {
+
+        direction.x -= 1;
+
+    }
+
+    if (keys["d"]) {
+
+        direction.x += 1;
+
+    }
+
+
+    if (direction.length() > 0) {
+
+        direction.normalize();
+
+        player.position.x +=
+            direction.x * speed;
+
+        player.position.z +=
+            direction.z * speed;
+
+    }
+
+
+    // Limites de la maison
+
+    player.position.x =
+        THREE.MathUtils.clamp(
+            player.position.x,
+            -7.5,
+            7.5
+        );
+
+    player.position.z =
+        THREE.MathUtils.clamp(
+            player.position.z,
+            -7.5,
+            10
+        );
+
+}
+
+
+////////////////////////////////////////////////////////////
+// CAMERA / SOURIS
+////////////////////////////////////////////////////////////
+
+let yaw = 0;
+let pitch = 0;
+
+function mouseLook(event) {
+
+    if (
+        !gameStarted ||
+        document.pointerLockElement !==
+        renderer.domElement
+    ) return;
+
+
+    yaw -= event.movementX * 0.002;
+
+    pitch -= event.movementY * 0.002;
+
+    pitch =
+        THREE.MathUtils.clamp(
+            pitch,
+            -1.2,
+            1.2
+        );
+
+
+    player.rotation.y = yaw;
+
+    camera.rotation.x = pitch;
+
+}
+
+
+////////////////////////////////////////////////////////////
+// HUD
+////////////////////////////////////////////////////////////
+
+function updateHUD() {
+
+    document.getElementById(
+        "money"
+    ).textContent =
+        money + " €";
+
+
+    document.getElementById(
+        "energy"
+    ).textContent =
+        Math.max(0, energy);
+
+
+    document.getElementById(
+        "water"
+    ).textContent =
+        Math.max(0, water);
+
+
+    document.getElementById(
+        "co2"
+    ).textContent =
+        co2;
+
+
+    document.getElementById(
+        "mission"
+    ).textContent =
+        "Score écologique : " +
+        score +
+        " points. Continue à optimiser la maison !";
+
+}
+
+
+////////////////////////////////////////////////////////////
+// MESSAGE
+////////////////////////////////////////////////////////////
+
+let messageTimer;
+
+function showMessage(text) {
+
+    const element =
+        document.getElementById(
+            "message"
+        );
+
+    element.textContent = text;
+
+    element.classList.add("show");
+
+    clearTimeout(messageTimer);
+
+    messageTimer =
+        setTimeout(
+            () => {
+
+                element.classList.remove(
+                    "show"
+                );
+
+            },
+            3000
+        );
+
+}
+
+
+////////////////////////////////////////////////////////////
+// RESIZE
+////////////////////////////////////////////////////////////
+
+function resize() {
+
+    camera.aspect =
+        window.innerWidth /
+        window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+
+}
+
+
+////////////////////////////////////////////////////////////
+// BOUCLE PRINCIPALE
+////////////////////////////////////////////////////////////
+
+function animate() {
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    const delta =
+        clock.getDelta();
+
+
+    updatePlayer();
+
+    checkNearby();
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+////////////////////////////////////////////////////////////
+// LANCEMENT
+////////////////////////////////////////////////////////////
+
+init();
 
 </script>
 
