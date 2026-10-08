@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌱 Eco-Héros - Le jeu</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #dff6e5, #f8fff9);
+      color: #173b2b;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .game {
+      width: 100%;
+      max-width: 850px;
+      background: white;
+      border-radius: 25px;
+      padding: 30px;
+      box-shadow: 0 15px 50px rgba(0, 80, 40, 0.15);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    header h1 {
+      font-size: 42px;
+      margin: 0;
+    }
+
+    header p {
+      color: #62806e;
+      font-size: 18px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stat {
+      background: #eff9f1;
+      border-radius: 18px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .stat .number {
+      font-size: 28px;
+      font-weight: bold;
+      color: #16834e;
+    }
+
+    .stat span {
+      color: #668070;
+      font-size: 14px;
+    }
+
+    .progress-container {
+      background: #dfeee3;
+      height: 12px;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 25px;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: #28a65c;
+      transition: width 0.4s;
+    }
+
+    .mission {
+      background: #173b2b;
+      color: white;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+
+    .mission-number {
+      color: #9de7b5;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .question {
+      font-size: 25px;
+      font-weight: bold;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .choice {
+      border: 2px solid #dce9df;
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      cursor: pointer;
+      text-align: left;
+      transition: 0.2s;
+      font-size: 16px;
+    }
+
+    .choice:hover {
+      transform: translateY(-3px);
+      border-color: #28a65c;
+      background: #f3fff6;
+    }
+
+    .choice:disabled {
+      cursor: default;
+    }
+
+    .emoji {
+      font-size: 35px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .choice-title {
+      font-weight: bold;
+      font-size: 18px;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .choice-description {
+      color: #6b7c72;
+      font-size: 14px;
+    }
+
+    .good {
+      background: #e7faed !important;
+      border-color: #27a75d !important;
+    }
+
+    .bad {
+      background: #fff0f0 !important;
+      border-color: #e05c5c !important;
+    }
+
+    .result {
+      min-height: 35px;
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .next {
+      display: block;
+      margin: 15px auto 0;
+      padding: 14px 25px;
+      border: none;
+      border-radius: 12px;
+      background: #218c5b;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .next:hover {
+      background: #176f47;
+    }
+
+    .next:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .final {
+      text-align: center;
+      padding: 30px 10px;
+    }
+
+    .final h2 {
+      font-size: 35px;
+    }
+
+    .final-score {
+      font-size: 55px;
+      color: #218c5b;
+      font-weight: bold;
+    }
+
+    .tips {
+      background: #eff9f1;
+      border-radius: 18px;
+      padding: 20px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .tips li {
+      margin: 10px 0;
+    }
+
+    @media (max-width: 600px) {
+      .game {
+        padding: 20px;
+      }
+
+      header h1 {
+        font-size: 32px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .choices {
+        grid-template-columns: 1fr;
+      }
+
+      .question {
+        font-size: 21px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="game">
+
+  <header>
+    <h1>🌱 Eco-Héros</h1>
+    <p>Réduis ta facture et protège la planète !</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="number" id="score">0</div>
+      <span>🌿 Points écolo</span>
+    </div>
+
+    <div class="stat">
+      <div class="number" id="money">0 €</div>
+      <span>💰 Économies</span>
+    </div>
+
+    <div class="stat">
+      <div class="number" id="co2">0 kg</div>
+      <span>🌍 CO₂ évité</span>
+    </div>
+  </div>
+
+  <div class="progress-container">
+    <div class="progress" id="progress"></div>
+  </div>
+
+  <div id="gameContent">
+
+    <div class="mission">
+      <div class="mission-number" id="missionNumber">
+        Mission 1 / 8
+      </div>
+
+      <div class="question" id="question">
+        Chargement...
+      </div>
+    </div>
+
+    <div class="choices" id="choices"></div>
+
+    <div class="result" id="result"></div>
+
+    <button class="next" id="next" disabled>
+      Mission suivante →
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const missions = [
+
+  {
+    question: "🥶 Il fait un peu froid dans ton salon. Que fais-tu ?",
+
+    choices: [
+      {
+        emoji: "🔥",
+        title: "Augmenter le chauffage",
+        description: "Je monte le chauffage de 2°C.",
+        good: false
+      },
+      {
+        emoji: "🧥",
+        title: "Mettre un pull",
+        description: "Je garde le chauffage raisonnable.",
+        good: true,
+        money: 8,
+        co2: 1.8
+      },
+      {
+        emoji: "🪟",
+        title: "Ouvrir les fenêtres",
+        description: "Avec le chauffage allumé...",
+        good: false
+      }
+    ]
+  },
+
+  {
+    question: "💡 Tu quittes une pièce pendant une heure.",
+
+    choices: [
+      {
+        emoji: "💡",
+        title: "Laisser la lumière",
+        description: "Je la laisse allumée.",
+        good: false
+      },
+      {
+        emoji: "🌑",
+        title: "Éteindre la lumière",
+        description: "Pas besoin d'éclairer une pièce vide.",
+        good: true,
+        money: 4,
+        co2: 0.2
+      },
+      {
+        emoji: "📺",
+        title: "Laisser la télévision allumée",
+        description: "Je pars et je la laisse tourner.",
+        good: false
+      }
+    ]
+  },
+
+  {
+    question: "🚿 Comment économiser l'eau ?",
+
+    choices: [
+      {
+        emoji: "🚿",
+        title: "Prendre une douche courte",
+        description: "Une douche rapide consomme moins.",
+        good: true,
+        money: 7,
+        co2: 0.7
+      },
+      {
+        emoji: "🛁",
+        title: "Prendre un long bain",
+        description: "Beaucoup d'eau chaude.",
+        good: false
+      },
+      {
+        emoji: "🚰",
+        title: "Laisser couler le robinet",
+        description: "Pendant que je me brosse les dents.",
+        good: false
+      }
+    ]
+  },
+
+  {
+    question: "🧺 Tu dois faire une lessive.",
+
+    choices: [
+      {
+        emoji: "🧺",
+        title: "Attendre que la machine soit pleine",
+        description: "Puis choisir le programme éco.",
+        good: true,
+        money: 9,
+        co2: 1.1
+      },
+      {
+        emoji: "🧺",
+        title: "Faire une demi-machine",
+        description: "Même pour quelques vêtements.",
+        good: false
+      },
+      {
+        emoji: "🔥",
+        title: "Toujours laver à 60°C",
+        description: "Même lorsque ce n'est pas nécessaire.",
+        good: false
+      }
+    ]
+  },
+
+  {
+    question: "🥤 Tu as soif en dehors de chez toi.",
+
+    choices: [
+      {
+        emoji: "🥤",
+        title: "Acheter une bouteille",
+        description: "Une nouvelle bouteille plastique.",
+        good: false
+      },
+      {
+        emoji: "🚰",
+        title: "Utiliser ma gourde",
+        description: "Je la remplis avec de l'eau.",
+        good: true,
+        money: 6,
+        co2: 0.3
+      },
+      {
+        emoji: "🚗",
+        title: "Prendre la voiture",
+        description: "Pour acheter une bouteille.",
+        good: false
+      }
+    ]
+  },
+
+  {
+    question: "🔌 Ta facture d'électricité augmente.",
+
+    choices: [
+      {
+        emoji: "🔌",
+        title: "Débrancher les appareils inutilisés",
+        description: "Je limite les consommations inutiles.",
+        good: true,
+        money: 10,
+        co2: 2.2
+      },
+      {
+        emoji: "💻",
+        title: "Laisser le PC allumé",
+        description: "Même toute la nuit.",
+        good: false
+      },
+      {
+        emoji: "📺",
+        title: "Laisser tout en veille",
+        description: "Télévision, console, ordinateur...",
+        good: false
+      }
+    ]
+  },
+
+  {
+    question: "🚗 Tu dois aller acheter du pain.",
+
+    choices: [
+      {
+        emoji: "🚗",
+        title: "Prendre la voiture",
+        description: "Même si la boulangerie est proche.",
+        good: false
+      },
+      {
+        emoji: "🚲",
+        title: "Prendre le vélo",
+        description: "Bon pour la planète et gratuit.",
+        good: true,
+        money: 5,
+        co2: 1.5
+      },
+      {
+        emoji: "🚕",
+        title: "Prendre un taxi",
+        description: "Pour un trajet de quelques minutes.",
+        good: false
+      }
+    ]
+  },
+
+  {
+    question: "🍎 Tu dois acheter des fruits.",
+
+    choices: [
+      {
+        emoji: "🥭",
+        title: "Acheter des produits locaux et de saison",
+        description: "Moins de transport et souvent moins cher.",
+        good: true,
+        money: 8,
+        co2: 1.4
+      },
+      {
+        emoji: "✈️",
+        title: "Choisir des fruits importés par avion",
+        description: "Un transport très énergivore.",
+        good: false
+      },
+      {
+        emoji: "🛒",
+        title: "Acheter beaucoup plus que nécessaire",
+        description: "Risque de gaspillage.",
+        good: false
+      }
+    ]
+  }
+
+];
+
+let currentMission = 0;
+let score = 0;
+let money = 0;
+let co2 = 0;
+let answered = false;
+
+
+const scoreElement = document.getElementById("score");
+const moneyElement = document.getElementById("money");
+const co2Element = document.getElementById("co2");
+
+const missionNumber = document.getElementById("missionNumber");
+const question = document.getElementById("question");
+const choicesContainer = document.getElementById("choices");
+
+const result = document.getElementById("result");
+const nextButton = document.getElementById("next");
+const progress = document.getElementById("progress");
+
+
+function updateStats() {
+
+  scoreElement.textContent = score;
+
+  moneyElement.textContent =
+    Math.round(money) + " €";
+
+  co2Element.textContent =
+    co2.toFixed(1) + " kg";
+}
+
+
+function showMission() {
+
+  answered = false;
+
+  const mission = missions[currentMission];
+
+  missionNumber.textContent =
+    "Mission " +
+    (currentMission + 1) +
+    " / " +
+    missions.length;
+
+  question.textContent = mission.question;
+
+  choicesContainer.innerHTML = "";
+
+  result.textContent = "";
+
+  nextButton.disabled = true;
+
+  nextButton.textContent =
+    currentMission === missions.length - 1
+      ? "Voir mon résultat 🌍"
+      : "Mission suivante →";
+
+  progress.style.width =
+    (currentMission / missions.length * 100) + "%";
+
+
+  mission.choices.forEach((choice) => {
+
+    const button = document.createElement("button");
+
+    button.className = "choice";
+
+    button.innerHTML = `
+      <span class="emoji">${choice.emoji}</span>
+
+      <span class="choice-title">
+        ${choice.title}
+      </span>
+
+      <span class="choice-description">
+        ${choice.description}
+      </span>
+    `;
+
+    button.addEventListener("click", () => {
+
+      if (answered) return;
+
+      answered = true;
+
+      document
+        .querySelectorAll(".choice")
+        .forEach(btn => btn.disabled = true);
+
+
+      if (choice.good) {
+
+        button.classList.add("good");
+
+        score += 10;
+
+        money += choice.money || 0;
+
+        co2 += choice.co2 || 0;
+
+        result.textContent =
+          "✅ Excellent ! +10 points 🌱";
+
+      } else {
+
+        button.classList.add("bad");
+
+        score = Math.max(0, score - 3);
+
+        result.textContent =
+          "❌ Pas idéal... -3 points. Essaie de faire plus écologique !";
+      }
+
+
+      updateStats();
+
+      nextButton.disabled = false;
+
+    });
+
+    choicesContainer.appendChild(button);
+
+  });
+
+}
+
+
+function showFinalScreen() {
+
+  progress.style.width = "100%";
+
+  document.getElementById("gameContent").innerHTML = `
+
+    <div class="final">
+
+      <h2>🎉 Mission terminée !</h2>
+
+      <p>Voici ton résultat :</p>
+
+      <div class="final-score">
+        ${score} points
+      </div>
+
+      <div class="tips">
+
+        <h3>🌍 Ton bilan</h3>
+
+        <p>
+          💰 Économies potentielles :
+          <strong>${Math.round(money)} €</strong>
+        </p>
+
+        <p>
+          🌱 CO₂ évité :
+          <strong>${co2.toFixed(1)} kg</strong>
+        </p>
+
+        <p>
+          ⭐ Score écologique :
+          <strong>${score} / ${missions.length * 10}</strong>
+        </p>
+
+        <h3>💡 Quelques réflexes à retenir</h3>
+
+        <ul>
+          <li>Éteindre les lumières inutiles.</li>
+          <li>Éviter de surchauffer son logement.</li>
+          <li>Privilégier les douches courtes.</li>
+          <li>Faire tourner les machines pleines.</li>
+          <li>Utiliser une gourde.</li>
+          <li>Marcher ou prendre le vélo lorsque c'est possible.</li>
+          <li>Limiter les appareils en veille.</li>
+        </ul>
+
+      </div>
+
+      <button class="next" onclick="location.reload()">
+        🔄 Rejouer
+      </button>
+
+    </div>
+  `;
+}
+
+
+nextButton.addEventListener("click", () => {
+
+  if (!answered) return;
+
+  if (currentMission < missions.length - 1) {
+
+    currentMission++;
+
+    showMission();
+
+  } else {
+
+    showFinalScreen();
+
+  }
+
+});
+
+
+showMission();
+updateStats();
+
+</script>
+
+</body>
+</html>
